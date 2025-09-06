@@ -1051,15 +1051,15 @@ app.get('/puppeteer-status', requireAuth, async (req, res) => {
 
 
 // Keep Render service awake by pinging itself every 14 minutes
-// setInterval(() => {
-//   const url = 'https://ideal-computing-machine-1lcb.onrender.com'; // Replace with your actual Render URL
+setInterval(() => {
+  const url = 'https://thequick10.onrender.com'; // Replace with your actual Render URL
 
-//   https.get(url, (res) => {
-//     console.log(`[KEEP-AWAKE] Pinged self. Status code: ${res.statusCode}`);
-//   }).on('error', (err) => {
-//     console.error('[KEEP-AWAKE] Self-ping error:', err.message);
-//   });
-// }, 14 * 60 * 1000); // every 14 minutes
+  https.get(url, (res) => {
+    console.log(`[KEEP-AWAKE] Pinged self. Status code: ${res.statusCode}`);
+  }).on('error', (err) => {
+    console.error('[KEEP-AWAKE] Self-ping error:', err.message);
+  });
+}, 14 * 60 * 1000); // every 14 minutes
 
 app.listen(PORT, () => {
   console.log(`🚀 Region-aware resolver running at http://localhost:${PORT}`);
