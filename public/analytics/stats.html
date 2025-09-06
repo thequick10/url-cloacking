@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5220/5220478.png">
+  <meta name="author" content="Rupesh Shah">
+  <meta name="google-site-verification" content="asegsNffwXTljUqyu173MU6zcZ0-uSf9heJOXc3K7Jc" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+  <link rel="stylesheet" href="../analytics/stats.css">
+  <!-- Link Page loader CSS -->
+  <link rel="stylesheet" href="../components/page-loader/loader.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <title>Data Usage Dashboard</title>
+  <script>
+    fetch('/api/auth/me').then(r=>r.json()).then(d=>{ if(!d.user){ location.href='/login'; }});
+  </script>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="container">
+    <div class="header">
+      <h1>📊 API Requests Analytics</h1>
+      <p>Advanced Usage Dashboard & Analytics</p>
+    </div>
+
+    <div class="dashboard-card">
+      <!-- Controls Section -->
+      <div class="controls-section">
+        <div class="controls-grid">
+          <div class="form-group">
+            <label for="from">📅 From Date</label>
+            <input type="date" id="from" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="to">📅 To Date</label>
+            <input type="date" id="to" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="search">🔍 Search Filter</label>
+            <input type="text" id="search" class="form-control" placeholder="Search by date...">
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="button" id="fetchBtn" class="btn btn-primary">
+            🚀 Fetch Data
+          </button>
+          <button type="button" id="clearBtn" class="btn btn-secondary">
+            🧹 Clear Filters
+          </button>
+          <a href="../resolution-stats/resolutions.html">
+            <button type="button" class="resolutions-stats btn btn-danger">
+              🪩 Check Resolutions Stats
+            </button>
+          </a>
+          <div class="export-controls" id="exportControls" style="display: none;">
+            <select class="export-select" id="exportFormatSelect">
+              <option value="csv">📄 CSV</option>
+              <option value="xlsx">📊 XLSX</option>
+            </select>
+            <button class="export-btn" id="exportBtn">⬇️ Export</button>
+          </div>
+        </div>
+        <div class="active-filters" id="activeFilters" style="display: none;">
+          <strong>Active Filters:</strong>
+          <div id="filterBadges"></div>
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div class="loader" id="loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Fetching your data...</div>
+      </div>
+
+      <!-- Error Message -->
+      <div class="error-message" id="errorMessage"></div>
+
+      <!-- Success Message -->
+      <div class="success-message" id="successMessage"></div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="resultsSection">
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+          <div class="stat-card1">
+            <div class="stat-value" id="totalRequests">0</div>
+            <div class="stat-label">Total Requests</div>
+          </div>
+          <div class="stat-card2">
+            <div class="stat-value" id="totalDays">0</div>
+            <div class="stat-label">Total Days</div>
+          </div>
+          <div class="stat-card3">
+            <div class="stat-value" id="avgRequests">0</div>
+            <div class="stat-label">Avg per Day</div>
+          </div>
+          <div class="stat-card4">
+            <div class="stat-value" id="peakRequests">0</div>
+            <div class="stat-label">Peak Day</div>
+          </div>
+          <!-- New Bandwidth Card -->
+          <div class="stat-card5">
+            <div class="stat-value" id="totalBandwidth">0</div>
+            <div class="stat-label">Total Bandwidth</div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+          <div class="table-header">
+            <div class="table-title">📋 Usage Details</div>
+            <div class="sort-controls">
+              <span style="margin-right: 10px;">Sort:</span>
+              <button class="sort-btn active" id="sortNewest">🆕 Newest</button>
+              <button class="sort-btn" id="sortOldest">📅 Oldest</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Requests</th>
+                  <th>Bandwidth</th>
+                  <th>Day of Week</th>
+                  <th>Change</th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="floating-navbar">
+    <div class="button-container">
+      <a href="/" class="button" title="Home">
+        <svg class="icon" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M946.5 505L560.1 118.8l-25.9-25.9a31.5 31.5 0 0 0-44.4 0L77.5 505a63.9 63.9 0 0 0-18.8 46c.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8a63.6 63.6 0 0 0 18.7-45.3c0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204z"/>
+        </svg>
+        <span class="label">Home</span>
+      </a>
+      <a href="../resolution-stats/resolutions.html" class="button" title="Resolution Stats">
+        <svg class="icon" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M574.6 266.7c-22.2 0-40.2 18-40.2 40.2s18 40.2 40.2 40.2h163.6c38.6 0 70.1 31.5 70.1 70.1s-31.5 70.1-70.1 70.1H555.4c-61.3 0-111.1 49.8-111.1 111.1s49.8 111.1 111.1 111.1h163.6c22.2 0 40.2-18 40.2-40.2s-18-40.2-40.2-40.2H574.6c-18.3 0-33.1-14.8-33.1-33.1s14.8-33.1 33.1-33.1h182.8c76.5 0 138.7-62.2 138.7-138.7s-62.2-138.7-138.7-138.7H574.6zM449.4 757.3c22.2 0 40.2-18 40.2-40.2s-18-40.2-40.2-40.2H285.8c-38.6 0-70.1-31.5-70.1-70.1s31.5-70.1 70.1-70.1h182.8c61.3 0 111.1-49.8 111.1-111.1S530 314.6 468.7 314.6H305.1c-22.2 0-40.2 18-40.2 40.2s18 40.2 40.2 40.2h163.6c18.3 0 33.1 14.8 33.1 33.1s-14.8 33.1-33.1 33.1H285.8c-76.5 0-138.7 62.2-138.7 138.7s62.2 138.7 138.7 138.7h163.6z"/>
+        </svg>
+        <span class="label">Resolution Stats</span>
+      </a>
+      <a href="../time-stats/time-stats.html" class="button" title="Time Stats">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 1.75C6.07 1.75 1.25 6.57 1.25 12.5S6.07 23.25 12 23.25 22.75 18.43 22.75 12.5 17.93 1.75 12 1.75zm0 20c-5.1 0-9.25-4.15-9.25-9.25S6.9 3.25 12 3.25 21.25 7.4 21.25 12.5 17.1 21.75 12 21.75zm.75-14h-1.5v6l5.25 3.15.75-1.23-4.5-2.67V7.75z"/>
+        </svg>
+        <span class="label">Time Stats</span>
+      </a>
+    </div>
+  </div>
+  <!-- Network Status Toast -->
+  <div id="network-toast" class="network-toast hidden"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+  <!-- SheetJS for XLSX export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script>
+    let currentData = {};
+    let filteredData = {};
+    let currentSort = 'newest';
+    let summaryData = {};
+
+    // DOM Elements
+    const fromInput = document.getElementById('from');
+    const toInput = document.getElementById('to');
+    const searchInput = document.getElementById('search');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const exportSelect = document.getElementById('exportFormatSelect');
+    const loader = document.getElementById('loader');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    const resultsSection = document.getElementById('resultsSection');
+    const dataTableBody = document.getElementById('dataTableBody');
+    const sortNewestBtn = document.getElementById('sortNewest');
+    const sortOldestBtn = document.getElementById('sortOldest');
+    const activeFilters = document.getElementById('activeFilters');
+    const filterBadges = document.getElementById('filterBadges');
+    const exportControls = document.getElementById('exportControls');
+
+    let fromPicker, toPicker;
+
+    // Utility function to format bytes to human readable format
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      
+      const k = 1000; // Changed from 1024 to 1000
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function initializeDatePickers() {
+      const today = new Date();
+      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      fromPicker = flatpickr(fromInput, {
+        dateFormat: "Y-m-d",
+        defaultDate: lastWeek,
+        maxDate: today,
+        onChange: function (selectedDates) {
+          if (toPicker && selectedDates[0]) {
+            toPicker.set('minDate', selectedDates[0]);
+          }
+        }
+      });
+
+      toPicker = flatpickr(toInput, {
+        dateFormat: "Y-m-d",
+        defaultDate: today,
+        maxDate: today,
+        onChange: function (selectedDates) {
+          if (fromPicker && selectedDates[0]) {
+            fromPicker.set('maxDate', selectedDates[0]);
+          }
+        }
+      });
+    }
+
+    function showElement(el) {
+      el.style.display = 'block';
+    }
+
+    function hideElement(el) {
+      el.style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+      successMessage.textContent = msg;
+      showElement(successMessage);
+      setTimeout(() => hideElement(successMessage), 3000);
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      showElement(errorMessage);
+    }
+
+    function clearMessages() {
+      hideElement(errorMessage);
+      hideElement(successMessage);
+    }
+
+    async function fetchData() {
+      const from = fromInput.value;
+      const to = toInput.value;
+
+      if (!from || !to) {
+        showError('Please select both from and to dates.');
+        return;
+      }
+
+      if (new Date(from) > new Date(to)) {
+        showError('From date cannot be later than to date.');
+        return;
+      }
+
+      clearMessages();
+      showElement(loader);
+      hideElement(resultsSection);
+      hideElement(exportControls);
+
+      try {
+        const response = await fetch(`/zone-usage?from=${from}&to=${to}`);
+        const responseData = await response.json();
+
+        if (responseData.error) {
+          showError(responseData.error);
+        } else {
+          // Extract data and summary from response
+          currentData = responseData.data || {};
+          summaryData = responseData.summary || {};
+          filteredData = { ...currentData };
+          
+          updateDisplay();
+          showElement(resultsSection);
+          exportControls.style.display = 'flex';
+          showSuccess('Data fetched successfully!');
+        }
+      } catch (error) {
+        // Generate sample data with bandwidth
+        currentData = generateSampleData(from, to);
+        summaryData = {
+          totalBandwidth: Object.values(currentData).reduce((sum, item) => sum + item.bandwidth, 0),
+          totalRequests: Object.values(currentData).reduce((sum, item) => sum + item.requests, 0),
+          dateRange: { from, to }
+        };
+        filteredData = { ...currentData };
+        
+        updateDisplay();
+        showElement(resultsSection);
+        exportControls.style.display = 'flex';
+        showSuccess('Sample data loaded for demonstration!');
+      } finally {
+        hideElement(loader);
+      }
+    }
+
+    function generateSampleData(from, to) {
+      const data = {};
+      const startDate = new Date(from);
+      const endDate = new Date(to);
+
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        data[dateStr] = {
+          requests: Math.floor(Math.random() * 1000) + 100,
+          bandwidth: Math.floor(Math.random() * 1000000000) + 10000000 // Random bytes
+        };
+      }
+
+      return data;
+    }
+
+    function applyFilters() {
+      const searchTerm = searchInput.value.toLowerCase();
+      filteredData = {};
+
+      for (const [date, data] of Object.entries(currentData)) {
+        const matches = !searchTerm || date.includes(searchTerm);
+        if (matches) filteredData[date] = data;
+      }
+
+      updateDisplay();
+      updateActiveFilters();
+    }
+
+    function updateActiveFilters() {
+      const badges = [];
+
+      if (searchInput.value) {
+        badges.push(`Search: ${searchInput.value}`);
+      }
+
+      if (badges.length > 0) {
+        filterBadges.innerHTML = badges.map(b => `<span class="filter-badge">${b}</span>`).join('');
+        showElement(activeFilters);
+      } else {
+        hideElement(activeFilters);
+      }
+    }
+
+    function clearFilters() {
+      searchInput.value = '';
+      hideElement(resultsSection);
+      hideElement(activeFilters);
+      exportControls.style.display = 'none';
+      clearMessages();
+
+      const today = new Date();
+      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      if (fromPicker) fromPicker.setDate(lastWeek);
+      if (toPicker) toPicker.setDate(today);
+    }
+
+    function setSortOrder(order) {
+      currentSort = order;
+      sortNewestBtn.classList.toggle('active', order === 'newest');
+      sortOldestBtn.classList.toggle('active', order === 'oldest');
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      updateStats();
+      updateTable();
+    }
+
+    function updateStats() {
+      const dates = Object.keys(filteredData);
+      const dataValues = Object.values(filteredData);
+
+      const totalRequests = dataValues.reduce((sum, item) => sum + (item.requests || 0), 0);
+      const totalDays = dates.length;
+      const avgRequests = totalDays ? Math.round(totalRequests / totalDays) : 0;
+      const peakRequests = dataValues.length ? Math.max(...dataValues.map(item => item.requests || 0)) : 0;
+
+      // Always calculate total bandwidth from filtered data (sum of all days)
+      const totalBandwidth = dataValues.reduce((sum, item) => sum + (item.bandwidth || 0), 0);
+
+      document.getElementById('totalRequests').textContent = totalRequests.toLocaleString();
+      document.getElementById('totalDays').textContent = totalDays;
+      document.getElementById('avgRequests').textContent = avgRequests.toLocaleString();
+      document.getElementById('peakRequests').textContent = peakRequests.toLocaleString();
+      document.getElementById('totalBandwidth').textContent = formatBytes(totalBandwidth);
+    }
+
+    function updateTable() {
+      const sortedEntries = Object.entries(filteredData).sort((a, b) => {
+        return currentSort === 'newest' ? new Date(b[0]) - new Date(a[0]) : new Date(a[0]) - new Date(b[0]);
+      });
+
+      dataTableBody.innerHTML = sortedEntries.map(([date, data], index) => {
+        const dateObj = new Date(date);
+        const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        const requests = data.requests || 0;
+        const bandwidth = data.bandwidth || 0;
+        
+        let growth = '—';
+        if (index > 0) {
+          const prev = sortedEntries[index - 1][1].requests || 0;
+          if (prev > 0) {
+            const growthPercent = ((requests - prev) / prev * 100).toFixed(1);
+            const label = growthPercent > 30 
+              ? '🔺 High'
+              : growthPercent < -30 
+              ? '🔻 Minimal' 
+              : '';
+            growth = `${growthPercent > 0 ? '+' : ''}${growthPercent}% ${label}`;
+          }
+        }
+
+        return `
+          <tr>
+            <td>${date}</td>
+            <td class="request-count">${requests.toLocaleString()}</td>
+            <td class="bandwidth-count">${formatBytes(bandwidth)}</td>
+            <td>${dayOfWeek}</td>
+            <td>${growth}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function exportData(format) {
+      const sortedEntries = Object.entries(filteredData).sort((a, b) => {
+        return currentSort === 'newest' ? new Date(b[0]) - new Date(a[0]) : new Date(a[0]) - new Date(b[0]);
+      });
+
+      const exportData = sortedEntries.map(([date, data]) => ({
+        Date: date,
+        Requests: data.requests || 0,
+        'Bandwidth (Bytes)': data.bandwidth || 0,
+        'Bandwidth (Formatted)': formatBytes(data.bandwidth || 0),
+        'Day of Week': new Date(date).toLocaleDateString('en-US', { weekday: 'long' })
+      }));
+
+      if (format === 'csv') {
+        exportToCsv(exportData, 'bright-data-usage.csv');
+      } else if (format === 'xlsx') {
+        exportToXlsx(exportData, 'bright-data-usage.xlsx');
+      }
+    }
+
+    function exportToCsv(data, filename) {
+      const headers = Object.keys(data[0]);
+      const escape = val => typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))
+        ? `"${val.replace(/"/g, '""')}"`
+        : val;
+
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => headers.map(h => escape(row[h])).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      downloadFile(blob, filename);
+      showSuccess(`Exported as ${filename}`);
+    }
+
+    function exportToXlsx(data, filename) {
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "UsageData");
+
+      const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([wbout], { type: "application/octet-stream" });
+      downloadFile(blob, filename);
+      showSuccess(`Exported as ${filename}`);
+    }
+
+    function downloadFile(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeDatePickers();
+      fetchBtn.addEventListener('click', fetchData);
+      clearBtn.addEventListener('click', clearFilters);
+      exportBtn.addEventListener('click', () => {
+        const format = exportSelect.value;
+        exportData(format);
+      });
+      searchInput.addEventListener('input', applyFilters);
+      sortNewestBtn.addEventListener('click', () => setSortOrder('newest'));
+      sortOldestBtn.addEventListener('click', () => setSortOrder('oldest'));
+    });
+
+    // Network Connection toast js
+    function showNetworkToast(message, type) {
+      const toast = document.getElementById('network-toast');
+      toast.textContent = message;
+      toast.className = `network-toast ${type}`;
+      toast.classList.remove('hidden');
+
+      if (type === 'online') {
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
+      }
+    }
+
+    if (!navigator.onLine) {
+      showNetworkToast("You're offline. Check your connection.", 'offline');
+    }
+
+    window.addEventListener('offline', () => {
+      showNetworkToast("You're offline. Check your connection.", 'offline');
+    });
+
+    window.addEventListener('online', () => {
+      showNetworkToast("You're back online 🎉", 'online');
+    });
+  </script>
+  <script src="../components/page-loader/loader.js"></script>
+  <script src="../components/navbar/navbar.js"></script>
+</body>
+</html>

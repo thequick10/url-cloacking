@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resolution Stats Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-site-verification" content="asegsNffwXTljUqyu173MU6zcZ0-uSf9heJOXc3K7Jc" />
+  <link rel="stylesheet" href="resolutions.css">
+  <link rel="stylesheet" href="../components/page-loader/loader.css">
+  <script>
+    fetch('/api/auth/me').then(r=>r.json()).then(d=>{ if(!d.user){ location.href='/login'; }});
+  </script>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="floating-navbar">
+    <div class="button-container">
+      <a href="/" class="button" title="Home">
+        <svg class="icon" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M946.5 505L560.1 118.8l-25.9-25.9a31.5 31.5 0 0 0-44.4 0L77.5 505a63.9 63.9 0 0 0-18.8 46c.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8a63.6 63.6 0 0 0 18.7-45.3c0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204z"/>
+        </svg>
+        <span class="label">Home</span>
+      </a>
+      <a href="../analytics/stats.html" class="button" title="Analytics">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 22h16v-2H4v2zm2-4h2v-7H6v7zm5 0h2V6h-2v12zm5 0h2v-4h-2v4z"/>
+        </svg>
+        <span class="label">Analytics</span>
+      </a>
+      <a href="../time-stats/time-stats.html" class="button" title="Time Stats">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 1.75C6.07 1.75 1.25 6.57 1.25 12.5S6.07 23.25 12 23.25 22.75 18.43 22.75 12.5 17.93 1.75 12 1.75zm0 20c-5.1 0-9.25-4.15-9.25-9.25S6.9 3.25 12 3.25 21.25 7.4 21.25 12.5 17.1 21.75 12 21.75zm.75-14h-1.5v6l5.25 3.15.75-1.23-4.5-2.67V7.75z"/>
+        </svg>
+        <span class="label">Time Stats</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+        <h1>📊 Resolution Stats</h1>
+        <div class="subtitle">Real-time URL monitoring dashboard</div>
+    </div>
+    
+    <div class="dashboard-stats">
+        <div class="stats-grid">
+        <div class="stat-card success">
+            <div class="stat-icon">✅</div>
+            <div class="stat-number" id="total-success">0</div>
+            <div class="stat-label">Total Success</div>
+        </div>
+        <div class="stat-card failure">
+            <div class="stat-icon">❌</div>
+            <div class="stat-number" id="total-failure">0</div>
+            <div class="stat-label">Total Failure</div>
+        </div>
+        </div>
+
+        <div class="section">
+        <h2 class="section-title">🌐 Regional Performance</h2>
+        <div class="table-container">
+            <table id="region-stats">
+            <thead>
+                <tr>
+                <th>Region</th>
+                <th>Success</th>
+                <th>Failure</th>
+                <th>Success Rate</th>
+                </tr>
+            </thead>
+            <tbody id="region-tbody">
+                <tr>
+                <td colspan="4" class="loading">Loading regional data...</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+        </div>
+
+        <div class="section">
+        <h2 class="section-title">🚨 Failed URLs</h2>
+        <div class="table-container">
+            <table>
+            <thead>
+                <tr>
+                <th>URL</th>
+                <th>Region</th>
+                <th>Failure Reason</th>
+                </tr>
+            </thead>
+            <tbody id="failed-urls">
+                <tr>
+                <td colspan="3" class="loading">Loading failure data...</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="refresh-indicator" id="refresh-indicator">
+    📡 Refreshing data...
+  </div>
+  <!-- Network Status Toast -->
+  <div id="network-toast" class="network-toast hidden"></div>
+
+  <script>
+    let isLoading = false;
+
+    function showRefreshIndicator() {
+      const indicator = document.getElementById('refresh-indicator');
+      indicator.classList.add('show');
+      setTimeout(() => {
+        indicator.classList.remove('show');
+      }, 2000);
+    }
+
+    function animateNumber(element, newValue) {
+      const currentValue = parseInt(element.textContent) || 0;
+      const increment = newValue > currentValue ? 1 : -1;
+      const duration = 500;
+      const steps = Math.abs(newValue - currentValue);
+      const stepDuration = duration / steps;
+
+      if (steps === 0) return;
+
+      let current = currentValue;
+      const timer = setInterval(() => {
+        current += increment;
+        element.textContent = current;
+        if (current === newValue) {
+          clearInterval(timer);
+        }
+      }, stepDuration);
+    }
+
+    async function loadStats() {
+      if (isLoading) return;
+      isLoading = true;
+      
+      try {
+        showRefreshIndicator();
+        
+        // Simulate API call with mock data for demonstration
+        const mockData = {
+          totalSuccess: Math.floor(Math.random() * 1000) + 500,
+          totalFailure: Math.floor(Math.random() * 100) + 10,
+          perRegion: {
+            "US-East": {
+              success: Math.floor(Math.random() * 200) + 100,
+              failure: Math.floor(Math.random() * 20) + 5
+            },
+            "US-West": {
+              success: Math.floor(Math.random() * 180) + 120,
+              failure: Math.floor(Math.random() * 15) + 3
+            },
+            "EU-Central": {
+              success: Math.floor(Math.random() * 160) + 90,
+              failure: Math.floor(Math.random() * 25) + 8
+            },
+            "Asia-Pacific": {
+              success: Math.floor(Math.random() * 140) + 80,
+              failure: Math.floor(Math.random() * 18) + 4
+            }
+          },
+          failedUrls: [
+            {
+              url: "https://example-down.com/api/v1/status",
+              region: "US-East",
+              reason: "Connection timeout"
+            },
+            {
+              url: "https://broken-service.net/health",
+              region: "EU-Central",
+              reason: "502 Bad Gateway"
+            },
+            {
+              url: "https://unstable-app.io/ping",
+              region: "Asia-Pacific",
+              reason: "DNS resolution failed"
+            }
+          ]
+        };
+
+        //For real implementation, use:
+        const res = await fetch("/resolution-stats");
+        const data = await res.json();
+        
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // const data = mockData;
+
+        // Animate the main stats
+        animateNumber(document.getElementById("total-success"), data.totalSuccess);
+        animateNumber(document.getElementById("total-failure"), data.totalFailure);
+
+        // Update regional stats
+        const regionTbody = document.getElementById("region-tbody");
+        regionTbody.innerHTML = "";
+
+        for (const [region, stats] of Object.entries(data.perRegion)) {
+          const total = stats.success + stats.failure;
+          const successRate = total > 0 ? ((stats.success / total) * 100).toFixed(1) : '0.0';
+          
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><span class="region-badge">${region}</span></td>
+            <td><span class="success">${stats.success}</span></td>
+            <td><span class="failure">${stats.failure}</span></td>
+            <td><strong>${successRate}%</strong></td>
+          `;
+          regionTbody.appendChild(row);
+        }
+
+        // Update failed URLs
+        const failedTable = document.getElementById("failed-urls");
+        failedTable.innerHTML = "";
+
+        if (data.failedUrls && data.failedUrls.length > 0) {
+          data.failedUrls.forEach(failure => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td><span class="url-text">${failure.url}</span></td>
+              <td><span class="region-badge">${failure.region}</span></td>
+              <td><span class="reason-text">${failure.reason}</span></td>
+            `;
+            failedTable.appendChild(row);
+          });
+        } else {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td colspan="3" class="empty-state">🎉 No failed URLs in the last 24 hours!</td>`;
+          failedTable.appendChild(row);
+        }
+
+      } catch (err) {
+        console.error("Failed to fetch stats:", err);
+        
+        // Show error state
+        document.getElementById("region-tbody").innerHTML = 
+          `<tr><td colspan="4" class="empty-state">⚠️ Failed to load data. Retrying...</td></tr>`;
+        document.getElementById("failed-urls").innerHTML = 
+          `<tr><td colspan="3" class="empty-state">⚠️ Failed to load data. Retrying...</td></tr>`;
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // Initial load
+    loadStats();
+    
+    // Refresh every 10 seconds
+    setInterval(loadStats, 10000);
+  </script>
+  <script src="../components/page-loader/loader.js"></script>
+  <script src="../components/navbar/navbar.js"></script>
+</body>
+</html>

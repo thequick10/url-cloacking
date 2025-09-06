@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Rupesh Shah">
+  <meta name="description" content="Update your profile information">
+  <title>My Account</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5220/5220478.png">
+  <link rel="stylesheet" href="../components/page-loader/loader.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+    body {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color:#e2e8f0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      max-width: 100%;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out;
+    }
+    .container1{
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      max-width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+    }
+    .header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      padding: 18px 40px;
+      text-align: center;
+    }
+    .card {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      background:#fff;
+      color: #111827;
+      border:1px solid #fff;
+      border-radius:0px;
+      padding:40px;
+    }
+    .form-section{
+        max-width: 100%;
+        width: 680px;
+    }
+    input, select {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      background:#fff;
+      color:#111827;
+      border:2px solid #f0f0f0;
+      padding:12px 16px;
+      border-radius:8px;
+      width: 100%;
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .tooltip {
+      font-size: 12px;
+      font-weight: 400;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+    .btn {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      background-color: #6365f1;
+      color: #fff;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      /* width: 100%; */
+    }
+    .btn:hover {
+      background-color: #4f46e5;
+    }
+    .btn:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .success {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .error {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    @media (max-width: 480px) {
+      .container {
+        margin: 10px;
+        padding: 10px;
+      }
+      .card {
+        padding: 20px;
+      }
+    }
+    .network-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 90vw;
+      padding: 14px 24px;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #fff;
+      background: #6365f1a3;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      z-index: 9999;
+      text-align: center;
+      transition: all 0.3s ease;
+      word-break: break-word;
+    }
+    .network-toast.hidden {
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+      pointer-events: none;
+    }
+    @media (max-width: 480px) {
+      .network-toast {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+        bottom: 16px;
+      }
+    }
+    .tab {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      float: left;
+      border: 1px solid #ccc;
+      /* background-color: #fff; */
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      width: 20%;
+      max-width: 100vh;
+      border-radius:12px;
+    }
+
+    /* Style the buttons inside the tab */
+    .tab button {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      display: block;
+      background-color: inherit;
+      color: #fff;
+      padding: 22px 16px;
+      width: 100%;
+      border: none;
+      outline: none;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 17px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    /* Change background color of buttons on hover */
+    .tab button:hover {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      background-color: #fff;
+      color: #000;
+    }
+
+    /* Create an active/current "tab button" class */
+    .tab button.active {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      background-color: #fff;
+      color: #000;
+    }
+
+    /* Style the tab content */
+    .tabcontent {
+      font-family: 'Albert Sans', system-ui, -apple-system;
+      float: left;
+      padding: 0px 32px;
+      /* border: 1px solid #ccc; */
+      width: 70%;
+      border-left: none;
+      height: 300px;
+      color: #000;
+    }
+
+    /* Hide admin tabs by default */
+    .tab button[id^="tab-"] {
+      display: none;
+    }
+
+    /* Show dashboard and event logs tabs by default */
+    #defaultOpen,
+    #tab-event-logs {
+      display: block;
+    }
+  </style>
+  <script>
+    fetch('/api/auth/me').then(r=>r.json()).then(d=>{ if(!d.user){ location.href='/login'; }});
+  </script>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="container">
+    <div class="header">
+      <h1>👤 My Account</h1>
+      <p class="muted-subtitle">Update your profile information</p>
+    </div>
+    <div class="container1">
+      <div class="card1">
+        <div class="tab">
+          <button class="tablinks" onclick="openTabs(event, 'Dashboard')" id="defaultOpen">👤 Dashboard</button>
+          <button class="tablinks" onclick="openTabs(event, 'EventLogs')" id="tab-event-logs">⏳ Event Logs</button>
+          <button class="tablinks" onclick="openTabs(event, 'Analytics')" id="tab-analytics">📊 Analytics</button>
+          <button class="tablinks" onclick="openTabs(event, 'ResolutionStats')" id="tab-resolution-stats">📈 Resolution Stats</button>
+          <button class="tablinks" onclick="openTabs(event, 'TimeStats')" id="tab-time-stats">⏱️ Time Stats</button>
+          <button class="tablinks" onclick="openTabs(event, 'AllUsers')" id="tab-all-users">👥 All Users</button>
+          <button class="tablinks" onclick="openTabs(event, 'SignupApprovals')" id="tab-signup-approvals">✅ Signup Approvals</button>
+        </div>
+        
+        <div id="Dashboard" class="tabcontent">
+          <h3>My Account</h3>
+          <p id="my-greet"></p>
+        </div>
+        
+        <div id="EventLogs" class="tabcontent">
+          <h3>⏳ Event Logs</h3>
+          <a href="/dashboard"><button class="btn">Check Events Logs</button> </a>
+        </div>
+
+        <div id="Analytics" class="tabcontent">
+          <h3>📊 Analytics</h3>
+          <a href="/analytics/stats.html"><button class="btn">View Analytics</button></a>
+        </div>
+
+        <div id="ResolutionStats" class="tabcontent">
+          <h3>📈 Resolution Stats</h3>
+          <a href="/resolution-stats/resolutions.html"><button class="btn">View Resolution Stats</button></a>
+        </div>
+
+        <div id="TimeStats" class="tabcontent">
+          <h3>⏱️ Time Stats</h3>
+          <a href="/time-stats/time-stats.html"><button class="btn">View Time Stats</button></a>
+        </div>
+
+        <div id="AllUsers" class="tabcontent">
+          <h3>👥 All Users</h3>
+          <a href="/user-management.html"><button class="btn">Manage Users</button></a>
+        </div>
+
+        <div id="SignupApprovals" class="tabcontent">
+          <h3>✅ Signup Approvals</h3>
+          <a href="/signup-requests.html"><button class="btn">Review Signups</button></a>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div id="message"></div>
+      <form id="profileForm" class="form-section">
+        <h2>Edit your details 📝</h2>
+        <div class="form-group">
+          <label for="name">Name <span class="tooltip">Type to change</span></label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="username">Username <span class="tooltip">Type to change</span></label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email <span class="tooltip">Type to change</span></label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">New Password (leave blank to keep current) <span class="tooltip">Type to change</span></label>
+          <input type="password" id="password" name="password" placeholder="Enter new password">
+        </div>
+        <button type="submit" class="btn" id="submitBtn">Update Profile</button>
+      </form>
+    </div>
+  </div>
+  <!-- Network Status Toast -->
+  <div id="network-toast" class="network-toast hidden"></div>
+  <script src="../components/page-loader/loader.js"></script>
+  <script src="../components/navbar/navbar.js" defer></script>
+  <script src="my-account.js"></script>
+</body>
+</html>

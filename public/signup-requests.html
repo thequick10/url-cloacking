@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Rupesh Shah">
+  <meta name="description" content="A powerful and efficient URL resolution web app service that tracks campaign parameters, handles complex redirects, and validates marketing URLs.">
+  <title>Signup Requests</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5220/5220478.png">
+  <link rel="stylesheet" href="./components/page-loader/loader.css">
+  <script>
+    // Gate: must be Admin
+    fetch('/api/auth/me')
+      .then(r=>r.json())
+      .then(d=>{ if(!d.user){ location.href='/login'; } else if(d.user.role!=='Admin'){ location.href='/index.html'; }});
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+    body { 
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      /* background:#0f172a;  */
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color:#e2e8f0; 
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { 
+      max-width: 1400px; 
+      margin: 0 auto; 
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out; 
+    }
+    .card { background:#fff; color: #111827; border:1px solid #fff; border-radius:0px; padding:16px; }
+    table { background:#fff; width:100%; border-collapse: collapse; border-radius: 15px; margin-top:12px; box-shadow:0 10px 30px rgba(0, 0, 0, 0.08);}
+    input, select { background:#fff; color:#111827; border:1px solid #374151; padding:10px 12px; border-radius:8px; }
+    button { background:#4f46e5; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    td {
+      padding: 20px 15px;
+      border-bottom: 1px solid #f1f5f9;
+      word-wrap: break-word;
+      max-width: 200px;
+      vertical-align: top;
+    }
+    th{
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      padding: 20px 15px;
+      text-align: left;
+      font-weight: bold;
+      text-transform: capitalize;
+      letter-spacing: 0.5px;
+      font-size: 1rem;
+      border-bottom: 3px solid #6366f1;
+     }
+    .row { display:flex; gap:8px; flex-wrap:wrap; }
+    .muted { color: #fff; font-size: 1.1rem; opacity: 0.9; font-weight: 300; }
+    .danger { background:#b91c1c; }
+    .success { background:#059669; }
+    .controls { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+    .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 18px 40px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="container">
+    <div class="header">
+      <h1>🛡️ Signup Approval</h1>
+      <p class="muted">Approve or reject new subscriber registrations</p>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <input id="q" placeholder="Search by name, username or email" />
+        <button onclick="loadPending()">Search</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Requested</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const tbody = document.getElementById('tbody');
+    const qEl = document.getElementById('q');
+    function toIST(ts){ if(!ts) return ''; const d = new Date(ts); return d.toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}); }
+    async function loadPending(){
+      const url = new URL('/api/users', location.origin);
+      if(qEl.value.trim()) url.searchParams.set('q', qEl.value.trim());
+      const res = await fetch(url);
+      const data = await res.json();
+      const pending = (data.users||[]).filter(u => !u.approved);
+      if (pending.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">
+              No pending signup requests.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      tbody.innerHTML = pending.map(u=>`
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.name||''}</td>
+          <td>${u.username}</td>
+          <td>${u.email||''}</td>
+          <td>${u.role}</td>
+          <td>${toIST(u.created_at)}</td>
+          <td>
+            <button class="success" onclick="approve(${u.id})">Approve</button>
+            <button class="danger" onclick="rejectReq(${u.id})">Reject</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    async function approve(id){
+      await fetch('/api/users/'+id+'/approve', { method:'POST' });
+      loadPending();
+    }
+    
+    async function rejectReq(id){
+      if(!confirm('Reject and delete request #'+id+'?')) return;
+      await fetch('/api/users/'+id+'/reject', { method:'POST' });
+      loadPending();
+    }
+    loadPending();
+  </script>
+  <script src="./components/page-loader/loader.js"></script>
+  <script src="./components/navbar/navbar.js" defer></script>
+</body>
+</html>

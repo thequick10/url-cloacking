@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Rupesh Shah">
+  <meta name="description" content="A powerful and efficient URL resolution web app service that tracks campaign parameters, handles complex redirects, and validates marketing URLs.">
+  <title>Manage Users</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5220/5220478.png">
+  <link rel="stylesheet" href="./components/page-loader/loader.css">
+  <script>
+    fetch('/api/auth/me').then(r=>r.json()).then(d=>{ if(!d.user){ location.href='/login'; } else if(d.user.role!=='Admin'){ location.href='/index.html'; }});
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+    body { 
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      /* background:#0f172a;  */
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color:#e2e8f0; 
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { 
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      max-width: 1400px; 
+      margin: 0 auto; 
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out; 
+    }
+    .card {font-family: 'Albert Sans', system-ui, -apple-system;  background:#fff; color: #111827; border:1px solid #fff; border-radius:0px; padding:16px; }
+    table { background:#fff; width:100%; border-collapse: collapse; border-radius: 15px; margin-top:0; box-shadow:0 10px 30px rgba(0, 0, 0, 0.08); overflow:hidden;}
+    input, select { background:#fff; color:#111827; border:1px solid #374151; padding:10px 12px; border-radius:8px; }
+    button { background:#4f46e5; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+    td {
+      padding: 20px 15px;
+      border-bottom: 1px solid #f1f5f9;
+      word-wrap: break-word;
+      max-width: 200px;
+      vertical-align: middle;
+    }
+    th{
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      padding: 20px 15px;
+      text-align: left;
+      font-weight: bold;
+      text-transform: capitalize;
+      letter-spacing: 0.5px;
+      font-size: 1rem;
+      border-bottom: 3px solid #6366f1;
+     }
+    .row { display:flex; gap:8px; flex-wrap:wrap; }
+    .muted { 
+      /* color:#94a3b8; */
+      color: #fff;
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 300;  
+    }
+    .danger { 
+      /* background:#b91c1c;  */
+      background: none;
+    }
+    .success { background:#059669; }
+    .controls { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+    .header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      padding: 18px 40px;
+      text-align: center;
+    }
+    .table-scroll{
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-header-time {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding-left: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 16px 16px 0px 0px;
+    margin-top: 20px;
+    }
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-header h2 {
+      margin: 0;
+      color: #1e293b;
+    }
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: #000;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #374151;
+    }
+    .form-group input {
+      width: 95%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      width: 100%;
+    }
+    .btn-secondary {
+      background: #6b7280;
+    }
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+    /* Network Toast - Glassomorphism & Responsive */
+    .network-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 90vw;
+      padding: 14px 24px;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #fff;
+      /* background: rgba(99, 102, 241, 0.25); */
+      background: #6365f1a3;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      z-index: 9999;
+      text-align: center;
+      transition: all 0.3s ease;
+      word-break: break-word;
+    }
+
+    /* Hidden state */
+    .network-toast.hidden {
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+      pointer-events: none;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 480px) {
+      .network-toast {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+        bottom: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="container">
+    <div class="header">
+      <h1>👥 User Management</h1>
+      <p class="muted">Admins can create, update roles, and delete users</p>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <input id="q" placeholder="Search by name, username or email" />
+        <button onclick="loadUsers()">Search</button>
+        <button onclick="openCreate()">+ Create User</button>
+      </div>
+      <div class="table-header-time">
+        <h2>User Details</h2>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created (IST)</th>
+              <th>Updated (IST)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- Password Change Modal -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Change Password</h2>
+        <span class="close" onclick="closePasswordModal()">&times;</span>
+      </div>
+      <form id="passwordForm">
+        <div class="form-group">
+          <label for="newPassword">New Password:</label>
+          <div style="position: relative;">
+            <input type="password" placeholder="Enter New Password" id="newPassword" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('newPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer;">
+              👁️
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password:</label>
+          <div style="position: relative;">
+            <input type="password" placeholder="Confirm Password" id="confirmPassword" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer;">
+              👁️
+            </button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closePasswordModal()">Cancel</button>
+          <button type="submit" class="success">Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    const tbody = document.getElementById('tbody');
+    const qEl = document.getElementById('q');
+    function toIST(ts){
+      if(!ts) return '';
+      const d = new Date(ts);
+      return d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    }
+    async function loadUsers(){
+      const url = new URL('/api/users', location.origin);
+      if(qEl.value.trim()) url.searchParams.set('q', qEl.value.trim());
+      const res = await fetch(url);
+      const data = await res.json();
+      tbody.innerHTML = (data.users||[]).map(u=>`
+        <tr>
+          <td>${u.id}</td>
+          <td><input value="${u.name||''}" onchange="save(${u.id}, {name:this.value})"></td>
+          <td><input value="${u.username}" onchange="save(${u.id}, {username:this.value})"></td>
+          <td><input value="${u.email||''}" onchange="save(${u.id}, {email:this.value})"></td>
+          <td>
+            <select onchange="save(${u.id}, {role:this.value})">
+              <option ${u.role==='Admin'?'selected':''}>Admin</option>
+              <option ${u.role==='Subscriber'?'selected':''}>Subscriber</option>
+              <option ${u.role==='Analytics'?'selected':''}>Analytics</option>
+            </select>
+          </td>
+          <td>${toIST(u.created_at)}</td>
+          <td>${toIST(u.updated_at)}</td>
+          <td>
+            <button class="danger" onclick="openPasswordModal(${u.id})">🖊</button>
+            <button class="danger" onclick="del(${u.id})">🗑</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    async function save(id, body){
+      await fetch('/api/users/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+      loadUsers();
+    }
+    function openCreate(){
+      const name = prompt('Name');
+      const username = prompt('Username');
+      const email = prompt('Email');
+      const password = prompt('Password');
+      const role = prompt('Role (Admin/Subscriber/Analytics)', 'Subscriber');
+      if(!username || !password) return;
+      fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, username, email, password, role }) }).then(()=>loadUsers());
+    }
+    async function del(id){
+      if(!confirm('Delete user '+id+'?')) return;
+      await fetch('/api/users/'+id, { method:'DELETE' });
+      loadUsers();
+    }
+
+    // Password change modal functions
+    function openPasswordModal(userId) {
+      currentUserId = userId;
+      document.getElementById('passwordModal').style.display = 'block';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+    }
+    
+    function closePasswordModal() {
+      document.getElementById('passwordModal').style.display = 'none';
+      currentUserId = null;
+    }
+    
+    // Handle password form submission
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      
+      if (newPassword !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+      }
+      
+      if (newPassword.length < 6) {
+        alert('Password must be at least 6 characters long!');
+        return;
+      }
+   
+      try {
+        const response = await fetch('/api/users/' + currentUserId, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ password: newPassword })
+        });
+        
+        if (response.ok) {
+          alert('Password updated successfully!');
+          closePasswordModal();
+          loadUsers();
+        } else {
+          const error = await response.json();
+          alert('Error updating password: ' + (error.error || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Error updating password: ' + error.message);
+      }
+    });
+
+    loadUsers();
+
+    //Show Hide password
+    function togglePassword(fieldId) {
+      const passwordInput = document.getElementById(fieldId);
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+      } else {
+        passwordInput.type = "password";
+      }
+    }
+
+    //Network Connectio toast js
+    function showNetworkToast(message, type) {
+      const toast = document.getElementById('network-toast');
+      toast.textContent = message;
+      toast.className = `network-toast ${type}`;
+      toast.classList.remove('hidden');
+
+      // Auto-hide for online state
+      if (type === 'online') {
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
+      }
+    }
+
+    // Initial check
+    if (!navigator.onLine) {
+      showNetworkToast("You're offline. Check your connection.", 'offline');
+    }
+
+    // Listen for changes
+    window.addEventListener('offline', () => {
+      showNetworkToast("You're offline. Check your connection.", 'offline');
+    });
+
+    window.addEventListener('online', () => {
+      showNetworkToast("You're back online 🎉", 'online');
+    });
+  </script>
+  <script src="./components/page-loader/loader.js"></script>
+  <script src="./components/navbar/navbar.js" defer></script>
+</body>
+</html>

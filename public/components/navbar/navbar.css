@@ -1,0 +1,154 @@
+/* Glass Floating Navbar */
+.floating-navbar.glass-navbar {
+  position: fixed;
+  top: 3.5rem;
+  left: 6.5rem;
+  z-index: 10000;
+  background: rgba(99, 102, 241, 0.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  transition: top 0.3s ease, padding 0.3s ease;
+}
+
+/* Shrink on scroll class (JavaScript adds this) */
+.floating-navbar.glass-navbar.shrink {
+  top: 0.5rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+/* Hamburger button */
+.navbar-hamburger {
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 12px;
+  transition: background 0.2s;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+}
+
+.navbar-hamburger:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Flyout menu */
+.navbar-flyout {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  border-radius: 16px;
+  padding: 18px 0;
+  animation: flyoutIn 0.25s ease-in-out;
+  margin-top: 8px;
+  /* ✅ Scroll support */
+  max-height: 70vh;        /* Prevent overflow */
+  overflow-y: auto;        /* Scroll if too tall */
+  overscroll-behavior: contain; /* Prevent scroll chaining */
+  scrollbar-width: thin;   /* For Firefox */
+}
+
+.navbar-flyout::-webkit-scrollbar {
+  width: 4px;
+}
+
+.navbar-flyout::-webkit-scrollbar-thumb {
+  background-color: rgba(99, 102, 241, 0.5);
+  border-radius: 12px;
+}
+
+.navbar-user-greeting {
+  padding: 14px 32px;
+  font-weight: bold;
+  color: #4f46e5;
+  background-color: rgba(99, 102, 241, 0.08);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: default;
+  user-select: none;
+}
+
+@keyframes flyoutIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar-flyout ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-flyout li {
+  margin: 0;
+  /* padding: 0; */
+}
+
+.navbar-flyout a {
+  display: block;
+  padding: 14px 32px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.navbar-flyout a:hover {
+  background: #6366f1;
+  color: #fff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .floating-navbar.glass-navbar {
+    display:none;
+    left: 1rem;
+    right: 1rem;
+    top: 1rem;
+    width: auto;
+    flex-direction: row;
+  }
+
+  .navbar-flyout {
+    left: auto;
+    right: 0;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .floating-navbar.glass-navbar {
+    display:none;
+    top: 0.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .navbar-flyout a {
+    padding: 12px 24px;
+    font-size: 0.9rem;
+  }
+
+  .navbar-hamburger {
+    padding: 10px;
+  }
+}

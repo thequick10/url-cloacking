@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Rupesh Shah">
+  <meta name="description" content="A powerful and efficient URL resolution web app service that tracks campaign parameters, handles complex redirects, and validates marketing URLs.">
+  <title>Activity Dashboard</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5220/5220478.png">
+  <link rel="stylesheet" href="./components/page-loader/loader.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+    body { 
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      /* background:#0f172a;  */
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color:#e2e8f0; 
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { 
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      max-width: 1400px; 
+      margin: 0 auto; 
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out; 
+    }
+    .header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      padding: 18px 40px;
+      text-align: center;
+    }
+    .card {font-family: 'Albert Sans', system-ui, -apple-system;  background:#fff; color: #111827; border:1px solid #fff; border-radius:0px; padding:16px; }
+    table { background:#fff; width:100%; border-collapse: collapse; border-radius: 15px; margin-top:12px; box-shadow:0 10px 30px rgba(0, 0, 0, 0.08);}
+    td {
+      padding: 20px 15px;
+      border-bottom: 1px solid #f1f5f9;
+      word-wrap: break-word;
+      max-width: 200px;
+      vertical-align: top;
+    }
+    th{
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
+      padding: 20px 15px;
+      text-align: left;
+      font-weight: bold;
+      text-transform: capitalize;
+      letter-spacing: 0.5px;
+      font-size: 1rem;
+      border-bottom: 3px solid #6366f1;
+     }
+    /* input { background:#111827; color:#e5e7eb; border:1px solid #374151; padding:10px 12px; border-radius:8px; } */
+    input, select {font-family: 'Albert Sans', system-ui, -apple-system;  background:#fff; color:#111827; border:1px solid #374151; padding:10px 12px; border-radius:8px; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; justify-content: center; align-items: center;}
+    select {font-family: 'Albert Sans', system-ui, -apple-system;  cursor: pointer; }
+    select option {font-family: 'Albert Sans', system-ui, -apple-system;  background:#111827; color:#e5e7eb; }
+    .muted { 
+      /* color:#94a3b8;  */
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      color: #000;
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 300; 
+    }
+    .muted-subtitle{
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      color: #fff;
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 300; 
+    }
+    /* 📱 Mobile adjustments */
+    @media (max-width: 480px) {
+      .row {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .row input, .row select, .row button {
+        width: 100%;
+        max-width: none;
+        font-family: 'Albert Sans', system-ui, -apple-system; 
+      }
+    }
+    /* Network Toast - Glassomorphism & Responsive */
+    .network-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 90vw;
+      padding: 14px 24px;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #fff;
+      /* background: rgba(99, 102, 241, 0.25); */
+      background: #6365f1a3;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      z-index: 9999;
+      text-align: center;
+      transition: all 0.3s ease;
+      word-break: break-word;
+    }
+
+    /* Hidden state */
+    .network-toast.hidden {
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+      pointer-events: none;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 480px) {
+      .network-toast {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+        bottom: 16px;
+      }
+    }
+    td pre {
+      max-width: 400px;
+      overflow-x: auto;
+      display: block;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1); /* Inverts icon color (black -> white) */
+      cursor: pointer;
+    }
+    .apply-button{
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      background-color: #6365f1a3;
+      color: #fff;
+      padding: 11px 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+  </style>
+  <script>
+    fetch('/api/auth/me').then(r=>r.json()).then(d=>{ if(!d.user){ location.href='/login'; }});
+  </script>
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <div class="container">
+    <div class="header">
+      <h1>📜 Activity Dashboard</h1>
+      <p class="muted-subtitle" id="scope"></p>
+    </div>
+    <div class="card">
+      <div class="row">
+        <input id="actionFilter" placeholder="Filter by action" />
+        <input id="usernameFilter" placeholder="Filter by username" />
+        <select id="roleFilter">
+          <option value="">All Roles</option>
+          <option value="Admin">Admin</option>
+          <option value="Subscriber">Subscriber</option>
+          <option value="Analytics">Analytics</option>
+        </select>
+        <input id="fromDate" type="date" />
+        <input id="toDate" type="date" />
+        <button class="apply-button" id="applyFilters">Apply Filters</button>
+        <button class="apply-button" id="clearFilters" style="background-color: #ef4444;">Clear</button>
+        <span class="muted" id="count"></span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table id="logsTable">
+          <thead>
+            <tr>
+              <th>Logs Count</th>
+              <th>User</th>
+              <th>Role</th>
+              <th>Action</th>
+              <th>Details</th>
+              <th>Timestamp (IST)</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- Network Status Toast -->
+  <div id="network-toast" class="network-toast hidden"></div>
+  <script>
+    const tbody = document.getElementById('tbody');
+    const actionFilter = document.getElementById('actionFilter');
+    const usernameFilter = document.getElementById('usernameFilter');
+    const roleFilter = document.getElementById('roleFilter');
+    const scope = document.getElementById('scope');
+
+    //Local timestamp convert funtion
+    function toIST(ts) {
+      if (!ts) return '';
+      const d = new Date(ts); // DO NOT append 'Z'
+      return d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    }
+
+    async function load(){
+      const me = await fetch('/api/auth/me').then(r=>r.json());
+      scope.textContent = me?.user?.role === 'Admin' ? 'Showing all activities' : 'Showing your activities';
+      const url = new URL('/api/activities', location.origin);
+      // const actionFilter = (qEl.value||'').trim();
+      const action = (actionFilter.value||'').trim();
+      const username = (usernameFilter.value||'').trim();
+      const role = (roleFilter.value||'').trim();
+      const from = document.getElementById('fromDate').value;
+      const to = document.getElementById('toDate').value;
+
+      // if(actionFilter) url.searchParams.set('action', actionFilter);
+      if(action) url.searchParams.set('action', action);
+      if(username) url.searchParams.set('username', username);
+      if(role) url.searchParams.set('role', role);
+      if(from) url.searchParams.set('from', from);
+      if(to) url.searchParams.set('to', to);
+
+      const res = await fetch(url);
+      const data = await res.json();
+      // render(data.activities||[]);
+      render(data.activities||[], data.total||0);
+    }
+    function render(rows, total){
+      document.getElementById('count').textContent = `Results: ${rows.length}${typeof total==='number' ? ` / ${total}` : ''}`;
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.username}</td>
+          <td>${r.role}</td>
+          <td>${r.action}</td>
+          <td><pre style="white-space:pre-wrap; margin:0;">${safe(typeof r.details === 'string' ? r.details : JSON.stringify(r.details || {}, null, 2))}</pre></td>
+          <td>${toIST(r.created_at)}</td>
+        </tr>
+      `).join('');
+    }
+    function safe(s){
+      return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    }
+    // qEl.addEventListener('input', load);
+    function clearFilters() {
+      actionFilter.value = '';
+      usernameFilter.value = '';
+      roleFilter.value = '';
+      document.getElementById('fromDate').value = '';
+      document.getElementById('toDate').value = '';
+      load();
+    }
+    document.getElementById('applyFilters').addEventListener('click', load);
+
+    document.getElementById('clearFilters').addEventListener('click', clearFilters);
+    
+    // Auto-apply filters on Enter key
+    [actionFilter, usernameFilter, roleFilter].forEach(el => {
+      el.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') load();
+      });
+    });
+
+    load();
+
+    //Network Connectio toast js
+    function showNetworkToast(message, type) {
+      const toast = document.getElementById('network-toast');
+      toast.textContent = message;
+      toast.className = `network-toast ${type}`;
+      toast.classList.remove('hidden');
+
+      // Auto-hide for online state
+      if (type === 'online') {
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
+      }
+    }
+
+    // Initial check
+    if (!navigator.onLine) {
+      showNetworkToast("You're offline. Check your connection.", 'offline');
+    }
+
+    // Listen for changes
+    window.addEventListener('offline', () => {
+      showNetworkToast("You're offline. Check your connection.", 'offline');
+    });
+
+    window.addEventListener('online', () => {
+      showNetworkToast("You're back online 🎉", 'online');
+    });
+  </script>
+  <script src="./components/page-loader/loader.js"></script>
+  <script src="./components/navbar/navbar.js" defer></script>
+</body>
+</html>
