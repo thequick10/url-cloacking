@@ -13,7 +13,7 @@ export function getDbPool() {
       database: process.env.MYSQL_DB,
       waitForConnections: true,
       connectionLimit: 5,
-      // timezone: 'Z' // store UTC
+      timezone: 'Z' // store UTC
     });
   }
   return pool;
