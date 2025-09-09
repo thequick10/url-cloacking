@@ -27,7 +27,7 @@ export async function ensureSchema() {
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255),
       username VARCHAR(100) UNIQUE NOT NULL,
-      email VARCHAR(255) UNIQUE,
+      email VARCHAR(191) UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
       role ENUM('Admin','Subscriber','Analytics') NOT NULL DEFAULT 'Subscriber',
       approved TINYINT(1) NOT NULL DEFAULT 0,
