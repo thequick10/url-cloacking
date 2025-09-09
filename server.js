@@ -269,7 +269,7 @@ const regionZoneMap = {
   IL: process.env.BRIGHTDATA_IL_PROXY,
   MD: process.env.BRIGHTDATA_MD_PROXY,
   RO: process.env.BRIGHTDATA_RO_PROXY,
-  Cl: process.env.BRIGHTDATA_CL_PROXY,
+  CL: process.env.BRIGHTDATA_CL_PROXY,
   SA: process.env.BRIGHTDATA_SA_PROXY
 };
 
@@ -1052,7 +1052,7 @@ app.get('/puppeteer-status', requireAuth, async (req, res) => {
 
 // Keep Render service awake by pinging itself every 14 minutes
 setInterval(() => {
-  const url = 'https://thequick10.onrender.com'; // Replace with your actual Render URL
+  const url = 'https://thequick10-d8kx.onrender.com'; // Replace with your actual Render URL
 
   https.get(url, (res) => {
     console.log(`[KEEP-AWAKE] Pinged self. Status code: ${res.statusCode}`);
