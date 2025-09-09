@@ -31,7 +31,7 @@ export async function ensureSchema() {
       password_hash VARCHAR(255) NOT NULL,
       role ENUM('Admin','Subscriber','Analytics') NOT NULL DEFAULT 'Subscriber',
       approved TINYINT(1) NOT NULL DEFAULT 0,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
