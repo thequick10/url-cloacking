@@ -68,11 +68,30 @@ export async function ensureSchema() {
   `);
 
   // Ensure at least one admin if env provided
+  // const [rows] = await pool.query('SELECT COUNT(*) as c FROM users');
+  // if (rows[0].c === 0 && process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD_HASH) {
+  //   await pool.query(
+  //     'INSERT INTO users (name, username, email, password_hash, role, approved) VALUES (?,?,?,?,?,1)',
+  //     [process.env.ADMIN_NAME || 'Admin', process.env.ADMIN_USERNAME, process.env.ADMIN_EMAIL || null, process.env.ADMIN_PASSWORD_HASH, 'Admin']
+  //   );
+  // }
+
+  // New Code to Ensure at least one admin if env provided
   const [rows] = await pool.query('SELECT COUNT(*) as c FROM users');
   if (rows[0].c === 0 && process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD_HASH) {
+    const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     await pool.query(
-      'INSERT INTO users (name, username, email, password_hash, role, approved) VALUES (?,?,?,?,?,1)',
-      [process.env.ADMIN_NAME || 'Admin', process.env.ADMIN_USERNAME, process.env.ADMIN_EMAIL || null, process.env.ADMIN_PASSWORD_HASH, 'Admin']
+      'INSERT INTO users (name, username, email, password_hash, role, approved, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        process.env.ADMIN_NAME || 'Admin',
+        process.env.ADMIN_USERNAME,
+        process.env.ADMIN_EMAIL || null,
+        process.env.ADMIN_PASSWORD_HASH,
+        'Admin',
+        1,
+        now
+      ]
     );
   }
 }
