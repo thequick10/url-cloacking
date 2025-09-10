@@ -270,7 +270,8 @@ const regionZoneMap = {
   MD: process.env.BRIGHTDATA_MD_PROXY,
   RO: process.env.BRIGHTDATA_RO_PROXY,
   CL: process.env.BRIGHTDATA_CL_PROXY,
-  SA: process.env.BRIGHTDATA_SA_PROXY
+  SA: process.env.BRIGHTDATA_SA_PROXY,
+  FL: process.env.BRIGHTDATA_FL_PROXY
 };
 
 //Make sure all proxy values exist at runtime or fail fast on startup.
@@ -586,7 +587,7 @@ app.get("/resolve", requireAuth, async (req, res) => {
     
     return res.json(responsePayload);
   } catch (err) {
-    try { await logActivity(req.session.user.id, 'RESOLVE_URL_Failed', `URL Resolution Failed ${inputUrl}`); } catch {}
+    try { await logActivity(req.session.user.id, 'FAILED', `URL Resolution Failed ${inputUrl}`); } catch {}
     resolutionStats.failure++;
     resolutionStats.failedUrls.push({ url: inputUrl, region, reason: err.message });
     resolutionStats.perRegion[region] = resolutionStats.perRegion[region] || { success: 0, failure: 0 };
@@ -796,13 +797,23 @@ app.get('/dashboard', requireAuth, (req, res) => {
 });
 
 // Get the usage.html file from analytics folder and making an endpoint
-app.get('/analytics/stats.html', requireAuth, (req, res) => {
+app.get('/analytics', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'analytics', 'stats.html'));
 });
 
 //serve it via a clean route
-app.get("/resolutions-stats/resolutions.html", requireAuth, (req, res) => {
+app.get("/resolution-stats", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'resolution-stats', 'resolutions.html'));
+});
+
+// Get time stats page from time-stats folder
+app.get("/time-stats", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'time-stats', 'time-stats.html'));
+});
+
+// Get User Managerment page page from public folder
+app.get("/manage-users", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'user-management.html'));
 });
 
 // My Account page
