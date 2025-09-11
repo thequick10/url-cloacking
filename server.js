@@ -271,7 +271,9 @@ const regionZoneMap = {
   RO: process.env.BRIGHTDATA_RO_PROXY,
   CL: process.env.BRIGHTDATA_CL_PROXY,
   SA: process.env.BRIGHTDATA_SA_PROXY,
-  FL: process.env.BRIGHTDATA_FL_PROXY
+  LI: process.env.BRIGHTDATA_LI_PROXY,
+  FI: process.env.BRIGHTDATA_FI_PROXY
+
 };
 
 //Make sure all proxy values exist at runtime or fail fast on startup.
@@ -792,8 +794,8 @@ app.get("/", requireAuth, (req, res) => {
 });
 
 // Dashboard route
-app.get('/dashboard', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+app.get('/event-logs', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboards', 'dashboard.html'));
 });
 
 // Get the usage.html file from analytics folder and making an endpoint
@@ -801,19 +803,9 @@ app.get('/analytics', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'analytics', 'stats.html'));
 });
 
-//serve it via a clean route
-app.get("/resolution-stats", requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'resolution-stats', 'resolutions.html'));
-});
-
-// Get time stats page from time-stats folder
-app.get("/time-stats", requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'time-stats', 'time-stats.html'));
-});
-
 // Get User Managerment page page from public folder
 app.get("/manage-users", requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'user-management.html'));
+  res.sendFile(path.join(__dirname, 'public', 'dashboards', 'user-management.html'));
 });
 
 // My Account page
@@ -823,7 +815,7 @@ app.get('/my-account', requireAuth, (req, res) => {
 
 // Admin-only Signup Requests page
 app.get('/signup-requests', requireRole('Admin'), (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'signup-requests.html'));
+  res.sendFile(path.join(__dirname, 'public', 'dashboards', 'signup-requests.html'));
 });
 
 //serve it via a clean route endpoint like /resolution-stats
@@ -852,7 +844,7 @@ app.post('/login', async (req, res) => {
     try { await logActivity(user.id, 'LOGIN', `${user.username}, LoggedIn Successfully`); } catch {}
     return req.session.save((err) => {
       if (err) return res.redirect('/auth/error.html');
-      return res.redirect('/index.html');
+      return res.redirect('/');
     });
   } catch (e) {
     return res.redirect('/auth/error.html');
