@@ -844,7 +844,7 @@ app.post('/login', async (req, res) => {
     try { await logActivity(user.id, 'LOGIN', `${user.username}, LoggedIn Successfully`); } catch {}
     return req.session.save((err) => {
       if (err) return res.redirect('/auth/error.html');
-      return res.redirect('/index.html');
+      return res.redirect('/');
     });
   } catch (e) {
     return res.redirect('/auth/error.html');
