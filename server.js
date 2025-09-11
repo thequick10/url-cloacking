@@ -273,7 +273,6 @@ const regionZoneMap = {
   SA: process.env.BRIGHTDATA_SA_PROXY,
   LI: process.env.BRIGHTDATA_LI_PROXY,
   FI: process.env.BRIGHTDATA_FI_PROXY
-
 };
 
 //Make sure all proxy values exist at runtime or fail fast on startup.
@@ -589,7 +588,7 @@ app.get("/resolve", requireAuth, async (req, res) => {
     
     return res.json(responsePayload);
   } catch (err) {
-    try { await logActivity(req.session.user.id, 'FAILED', `URL Resolution Failed ${inputUrl}`); } catch {}
+    try { await logActivity(req.session.user.id, 'RESOLVE_URL_Failed', `URL Resolution Failed ${inputUrl}`); } catch {}
     resolutionStats.failure++;
     resolutionStats.failedUrls.push({ url: inputUrl, region, reason: err.message });
     resolutionStats.perRegion[region] = resolutionStats.perRegion[region] || { success: 0, failure: 0 };
@@ -794,18 +793,18 @@ app.get("/", requireAuth, (req, res) => {
 });
 
 // Dashboard route
-app.get('/event-logs', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboards', 'dashboard.html'));
+app.get('/dashboard', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 // Get the usage.html file from analytics folder and making an endpoint
-app.get('/analytics', requireAuth, (req, res) => {
+app.get('/analytics/stats.html', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'analytics', 'stats.html'));
 });
 
-// Get User Managerment page page from public folder
-app.get("/manage-users", requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboards', 'user-management.html'));
+//serve it via a clean route
+app.get("/resolutions-stats/resolutions.html", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'resolution-stats', 'resolutions.html'));
 });
 
 // My Account page
@@ -815,7 +814,7 @@ app.get('/my-account', requireAuth, (req, res) => {
 
 // Admin-only Signup Requests page
 app.get('/signup-requests', requireRole('Admin'), (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboards', 'signup-requests.html'));
+  res.sendFile(path.join(__dirname, 'public', 'signup-requests.html'));
 });
 
 //serve it via a clean route endpoint like /resolution-stats
@@ -844,7 +843,7 @@ app.post('/login', async (req, res) => {
     try { await logActivity(user.id, 'LOGIN', `${user.username}, LoggedIn Successfully`); } catch {}
     return req.session.save((err) => {
       if (err) return res.redirect('/auth/error.html');
-      return res.redirect('/');
+      return res.redirect('/index.html');
     });
   } catch (e) {
     return res.redirect('/auth/error.html');
@@ -1052,10 +1051,9 @@ app.get('/puppeteer-status', requireAuth, async (req, res) => {
   }
 });
 
-
 // Keep Render service awake by pinging itself every 14 minutes
 setInterval(() => {
-  const url = 'https://thequick10-d8kx.onrender.com'; // Replace with your actual Render URL
+  const url = 'https://thequick10-d8kx.onrender.com/'; // Replace with your actual Render URL
 
   https.get(url, (res) => {
     console.log(`[KEEP-AWAKE] Pinged self. Status code: ${res.statusCode}`);

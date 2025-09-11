@@ -554,7 +554,6 @@ async function refreshSingleUrl(campaignId) {
     ) {
       campaign.finalUrl = finalUrl;
       campaign.date = formatDate(new Date());
-      await window.frontendLogger.logActivity('URL_REFRESHED', `URL has been refreshed`);
       showNotification(`✅ URL refreshed successfully! with region [${campaignRegion}] and uaType [${campaignUaType}]!`, "success");
     } else {
       throw new Error("Invalid resolution result");
@@ -562,7 +561,6 @@ async function refreshSingleUrl(campaignId) {
   } catch (error) {
     console.error("Single URL refresh failed:", error);
     campaign.finalUrl = originalFinalUrl; // Restore original
-    await window.frontendLogger.logActivity('FAILED', `URL Refresh has been failed`);
     showNotification("❌ Failed to refresh URL", "error");
   }
 
