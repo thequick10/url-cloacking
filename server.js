@@ -994,23 +994,117 @@ app.delete('/api/users/:id', requireRole('Admin'), async (req, res) => {
 });
 
 // Activities
+// app.get('/api/activities', requireAuth, async (req, res) => {
+//   try {
+//     const { page = 1, pageSize = 100, action, username, role, from, to } = req.query;
+//     const isAdmin = req.session.user.role === 'Admin';
+//     const { rows, total } = await listActivitiesForUserOrAll({
+//       userId: req.session.user.id,
+//       all: isAdmin,
+//       page: Number(page),
+//       pageSize: Number(pageSize),
+//       actionQuery: action,
+//       usernameQuery: username,
+//       roleQuery:role,
+//       fromDate: from,
+//       toDate: to
+//     });
+//     res.json({ activities: rows, total });
+//   } catch (e) {
+//     res.status(500).json({ error: 'Failed to fetch activities' });
+//   }
+// });
+
+// new code for /api/activities with paginations
 app.get('/api/activities', requireAuth, async (req, res) => {
   try {
-    const { page = 1, pageSize = 100, action, username, role, from, to } = req.query;
+    const {
+      page = 1,
+      pageSize = 100,
+      action,
+      username,
+      role,
+      from,
+      to
+    } = req.query;
+
     const isAdmin = req.session.user.role === 'Admin';
-    const { rows, total } = await listActivitiesForUserOrAll({
-      userId: req.session.user.id,
-      all: isAdmin,
-      page: Number(page),
-      pageSize: Number(pageSize),
-      actionQuery: action,
-      usernameQuery: username,
-      roleQuery:role,
-      fromDate: from,
-      toDate: to
+    const userId = req.session.user.id;
+    const currentPage = Number(page) || 1;
+    const limit = Number(pageSize) || 100;
+    const offset = (currentPage - 1) * limit;
+
+    const pool = getDbPool();
+
+    // Build SQL filters dynamically
+    const filters = [];
+    const values = [];
+
+    if (!isAdmin) {
+      filters.push('a.user_id = ?');
+      values.push(userId);
+    }
+
+    if (action && action.trim()) {
+      filters.push('LOWER(a.action) LIKE ?');
+      values.push(`%${action.trim().toLowerCase()}%`);
+    }
+
+    if (username && username.trim()) {
+      filters.push('LOWER(u.username) LIKE ?');
+      values.push(`%${username.trim().toLowerCase()}%`);
+    }
+
+    if (role && role.trim()) {
+      filters.push('u.role = ?');
+      values.push(role.trim());
+    }
+
+    if (from) {
+      filters.push('a.created_at >= ?');
+      values.push(new Date(from));
+    }
+
+    if (to) {
+      filters.push('a.created_at <= ?');
+      values.push(new Date(to));
+    }
+
+    const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+
+    // Count total
+    const [countResult] = await pool.query(
+      `
+      SELECT COUNT(*) as total
+      FROM activity_logs a
+      LEFT JOIN users u ON a.user_id = u.id
+      ${whereClause}
+      `,
+      values
+    );
+    const total = countResult[0].total;
+
+    // Get paginated rows
+    const [rows] = await pool.query(
+      `
+      SELECT a.id, u.username, u.role, a.action, a.details, a.created_at
+      FROM activity_logs a
+      LEFT JOIN users u ON a.user_id = u.id
+      ${whereClause}
+      ORDER BY a.created_at DESC
+      LIMIT ?
+      OFFSET ?
+      `,
+      [...values, limit, offset]
+    );
+
+    res.json({
+      activities: rows,
+      total
     });
-    res.json({ activities: rows, total });
-  } catch (e) {
+
+  } catch (err) {
+    console.error('Error fetching activities:', err);
     res.status(500).json({ error: 'Failed to fetch activities' });
   }
 });

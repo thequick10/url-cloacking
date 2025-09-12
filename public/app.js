@@ -329,6 +329,9 @@ async function addCampaign() {
 
   // ✅ Show success notification
   showNotification(`Resolution for ${country} (${uaType}) added successfully!`, "success");
+
+  //Log single url resolutions
+  await window.frontendLogger.logActivity('RESOLVE_URL', `Resolution for ${country} (${uaType}) added successfully!`);
 }
 
 // Replace your existing refreshAllUrls function with this improved version
@@ -555,6 +558,7 @@ async function refreshSingleUrl(campaignId) {
       campaign.finalUrl = finalUrl;
       campaign.date = formatDate(new Date());
       showNotification(`✅ URL refreshed successfully! with region [${campaignRegion}] and uaType [${campaignUaType}]!`, "success");
+      await window.frontendLogger.logActivity('URL_REFRESHED', `URL has been refreshed ${campaign.url}`);
     } else {
       throw new Error("Invalid resolution result");
     }
@@ -562,6 +566,7 @@ async function refreshSingleUrl(campaignId) {
     console.error("Single URL refresh failed:", error);
     campaign.finalUrl = originalFinalUrl; // Restore original
     showNotification("❌ Failed to refresh URL", "error");
+    await window.frontendLogger.logActivity('URL_REFRESHED_FAILED', `URL refresh failed ${campaign.url}`);
   }
 
   renderTable();
@@ -1335,7 +1340,8 @@ async function processImportedData(importedData) {
 
     // Final update
     progressNotification.innerHTML = `🎉 All ${totalProcessed} campaigns processed successfully!`;
-
+    //Log processed campaigns into my account page
+    await window.frontendLogger.logActivity('CAMPAIGNS_PROCESSED', `🎉 All ${totalProcessed} campaigns processed successfully!`);
     // Clean up originalIndex property after import is complete
     setTimeout(() => {
       campaigns.forEach((campaign) => {

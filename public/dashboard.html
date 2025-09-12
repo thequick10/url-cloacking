@@ -56,7 +56,7 @@
       border-bottom: 3px solid #6366f1;
      }
     /* input { background:#111827; color:#e5e7eb; border:1px solid #374151; padding:10px 12px; border-radius:8px; } */
-    input, select {font-family: 'Albert Sans', system-ui, -apple-system;  background:#fff; color:#111827; border:1px solid #374151; padding:10px 12px; border-radius:8px; }
+    input, select {font-family: 'Albert Sans', system-ui, -apple-system;  background:#fff; color:#111827; border:2px solid #e5e7eb; padding:10px 12px; border-radius:8px; }
     .row { display:flex; gap:8px; flex-wrap:wrap; justify-content: center; align-items: center;}
     select {font-family: 'Albert Sans', system-ui, -apple-system;  cursor: pointer; }
     select option {font-family: 'Albert Sans', system-ui, -apple-system;  background:#111827; color:#e5e7eb; }
@@ -134,7 +134,7 @@
       word-break: break-word;
     }
     input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1); /* Inverts icon color (black -> white) */
+      filter: invert(0); /* Inverts icon color (black -> white) */
       cursor: pointer;
     }
     .apply-button{
@@ -148,6 +148,25 @@
       font-size: 1rem;
       font-weight: 500;
       transition: all 0.3s ease;
+    }
+    .page-buttons{
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      background-color: #6365f1a3;
+      color: #fff;
+      padding: 11px 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .page-number{
+      font-family: 'Albert Sans', system-ui, -apple-system; 
+      color: #000;
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 300; 
     }
   </style>
   <script>
@@ -175,6 +194,8 @@
         <input id="toDate" type="date" />
         <button class="apply-button" id="applyFilters">Apply Filters</button>
         <button class="apply-button" id="clearFilters" style="background-color: #ef4444;">Clear</button>
+        <!-- Add this before the buttons -->
+        <input id="pageSizeInput" type="number" min="1" placeholder="Rows per page" style="width: 140px;" value="10"/>
         <span class="muted" id="count"></span>
       </div>
       <div style="overflow-x: auto;">
@@ -191,12 +212,23 @@
           </thead>
           <tbody id="tbody"></tbody>
         </table>
+        <p id="loadingText" class="muted" style="display: none; text-align: center;">⏳ Loading...</p>
       </div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 50px; margin: 16px 0;">
+        <button id="prevPage" class="page-buttons">⬅ Prev</button>
+        <span class="page-number" id="pageInfo">Page 1</span>
+        <button id="nextPage" class="apply-button">Next ➡</button>
+      </div>      
     </div>
   </div>
   <!-- Network Status Toast -->
   <div id="network-toast" class="network-toast hidden"></div>
   <script>
+    let currentPage = 1;
+    function getPageSize() {
+      const value = parseInt(document.getElementById('pageSizeInput').value);
+      return isNaN(value) || value <= 0 ? 25 : value; // fallback to default 25
+    }
     const tbody = document.getElementById('tbody');
     const actionFilter = document.getElementById('actionFilter');
     const usernameFilter = document.getElementById('usernameFilter');
@@ -211,30 +243,44 @@
     }
 
     async function load(){
-      const me = await fetch('/api/auth/me').then(r=>r.json());
-      scope.textContent = me?.user?.role === 'Admin' ? 'Showing all activities' : 'Showing your activities';
-      const url = new URL('/api/activities', location.origin);
-      // const actionFilter = (qEl.value||'').trim();
-      const action = (actionFilter.value||'').trim();
-      const username = (usernameFilter.value||'').trim();
-      const role = (roleFilter.value||'').trim();
-      const from = document.getElementById('fromDate').value;
-      const to = document.getElementById('toDate').value;
+      const loadingText = document.getElementById('loadingText');
+      loadingText.style.display = 'block'; // Show loading
 
-      // if(actionFilter) url.searchParams.set('action', actionFilter);
-      if(action) url.searchParams.set('action', action);
-      if(username) url.searchParams.set('username', username);
-      if(role) url.searchParams.set('role', role);
-      if(from) url.searchParams.set('from', from);
-      if(to) url.searchParams.set('to', to);
+      try {
+        const me = await fetch('/api/auth/me').then(r=>r.json());
+        scope.textContent = me?.user?.role === 'Admin' ? 'Showing all activities' : 'Showing your activities';
+        const url = new URL('/api/activities', location.origin);
+        const action = (actionFilter.value||'').trim();
+        const username = (usernameFilter.value||'').trim();
+        const role = (roleFilter.value||'').trim();
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
 
-      const res = await fetch(url);
-      const data = await res.json();
-      // render(data.activities||[]);
-      render(data.activities||[], data.total||0);
+        // if(actionFilter) url.searchParams.set('action', actionFilter);
+        if(action) url.searchParams.set('action', action);
+        if(username) url.searchParams.set('username', username);
+        if(role) url.searchParams.set('role', role);
+        if(from) url.searchParams.set('from', from);
+        if(to) url.searchParams.set('to', to);
+        
+        url.searchParams.set('page', currentPage);
+        const pageSize = getPageSize();
+        url.searchParams.set('pageSize', pageSize);
+
+        const res = await fetch(url);
+        const data = await res.json();
+        // render(data.activities||[]);
+        render(data.activities||[], data.total||0);
+      } catch (e) {
+        console.error('Failed to load activities:', e);
+        document.getElementById('count').textContent = '⚠ Failed to load activities.';
+      } finally {
+        loadingText.style.display = 'none'; // Hide loading
+      }
     }
     function render(rows, total){
-      document.getElementById('count').textContent = `Results: ${rows.length}${typeof total==='number' ? ` / ${total}` : ''}`;
+      // document.getElementById('count').textContent = `Results: ${rows.length}${typeof total==='number' ? ` / ${total}` : ''}`;
+      document.getElementById('count').textContent = `Results: ${rows.length} / ${total}`;
       tbody.innerHTML = rows.map(r => `
         <tr>
           <td>${r.id}</td>
@@ -245,10 +291,36 @@
           <td>${toIST(r.created_at)}</td>
         </tr>
       `).join('');
+      const pageSize = getPageSize();
+      const totalPages = Math.ceil(total / pageSize);
+      document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+
+      document.getElementById('prevPage').disabled = currentPage === 1;
+      document.getElementById('nextPage').disabled = currentPage >= totalPages;
     }
     function safe(s){
       return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
     }
+
+    //Wire Up Pagination Buttons
+    document.getElementById('prevPage').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        load();
+      }
+    });
+
+    document.getElementById('nextPage').addEventListener('click', () => {
+      currentPage++;
+      load();
+    });
+    //Reset to Page 1 on Page Size Change
+    document.getElementById('pageSizeInput').addEventListener('change', () => {
+      currentPage = 1;
+      load();
+    });
+
+
     // qEl.addEventListener('input', load);
     function clearFilters() {
       actionFilter.value = '';
@@ -256,9 +328,13 @@
       roleFilter.value = '';
       document.getElementById('fromDate').value = '';
       document.getElementById('toDate').value = '';
+      currentPage = 1;
       load();
     }
-    document.getElementById('applyFilters').addEventListener('click', load);
+    document.getElementById('applyFilters').addEventListener('click', () => {
+      currentPage = 1;
+      load()
+    });
 
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
     
