@@ -539,7 +539,8 @@ app.get("/resolve", requireAuth, async (req, res) => {
     }
 
     // Save timing stat (date, url, time) in IST with YYYY-MM-DD format
-    const today = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+    //const today = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const today = new Date().toISOString().slice(0, 10);
     // await appendTimingStat({ date: today, url: inputUrl, time: timeTaken });
     try {
       await appendTimingStat({ date: today, url: inputUrl, time: timeTaken });
@@ -583,17 +584,16 @@ app.get("/resolve", requireAuth, async (req, res) => {
       uaType
     };
 
-    const single_url_loaded = `URL Loaded ${inputUrl}`;
+    const single_url_loaded = `URL Added ${inputUrl}`;
     try { await logActivity(req.session.user.id, 'RESOLVE_URL', `${single_url_loaded}`); } catch {}
     
     return res.json(responsePayload);
   } catch (err) {
-    try { await logActivity(req.session.user.id, 'RESOLVE_URL_Failed', `URL Resolution Failed ${inputUrl}`); } catch {}
     resolutionStats.failure++;
     resolutionStats.failedUrls.push({ url: inputUrl, region, reason: err.message });
     resolutionStats.perRegion[region] = resolutionStats.perRegion[region] || { success: 0, failure: 0 };
     resolutionStats.perRegion[region].failure++;
-
+    try { await logActivity(req.session.user.id, 'RESOLVE_URL_FAILED', `URL Resolution Failed ${inputUrl}`); } catch {}
     console.error(`❌ Resolution failed:`, err.stack || err.message);
     return res.status(500).json({ error: "❌ Resolution failed", details: err.message });
   }

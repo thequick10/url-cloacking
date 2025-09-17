@@ -329,9 +329,6 @@ async function addCampaign() {
 
   // ✅ Show success notification
   showNotification(`Resolution for ${country} (${uaType}) added successfully!`, "success");
-
-  //Log single url resolutions
-  await window.frontendLogger.logActivity('RESOLVE_URL', `Resolution for ${country} (${uaType}) added successfully!`);
 }
 
 // Replace your existing refreshAllUrls function with this improved version
